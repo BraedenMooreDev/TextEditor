@@ -4,7 +4,7 @@
 pub struct TemplateApp {
     // Example stuff:
     content: String,
-
+    is_settings_window_open: bool,
     // this how you opt-out of serialization of a member
     // #[serde(skip)]
     // value: f32,
@@ -15,6 +15,7 @@ impl Default for TemplateApp {
         Self {
             // Example stuff:
             content: "".to_owned(),
+            is_settings_window_open: false,
         }
     }
 }
@@ -44,7 +45,17 @@ impl eframe::App for TemplateApp {
     /// Called each time the UI needs repainting, which may be many times per second.
     /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        let Self { content } = self;
+        let Self {
+            content,
+            is_settings_window_open,
+        } = self;
+
+        egui::Window::new("Settings")
+            .open(is_settings_window_open)
+            .default_pos(egui::Pos2::new(20.0, 20.0))
+            .show(ctx, |ui| {
+                ui.label("AAAAaa");
+            });
 
         // Examples of how to create different panels and windows.
         // Pick whichever suits you.
@@ -58,6 +69,11 @@ impl eframe::App for TemplateApp {
                 ui.menu_button("File", |ui| {
                     if ui.button("Quit").clicked() {
                         _frame.close();
+                    }
+                });
+                ui.menu_button("Preferences", |ui| {
+                    if ui.button("Settings").clicked() {
+                        self.is_settings_window_open = true;
                     }
                 });
             });
@@ -94,19 +110,11 @@ impl eframe::App for TemplateApp {
         egui::CentralPanel::default().show(ctx, |ui| {
             // The central panel the region left after adding TopPanel's and SidePanel's
 
-            ui.with_layout(egui::Layout::centered_and_justified(egui::Direction::TopDown), |ui| {
-                ui.code_editor(&mut *content)
-            });
+            ui.with_layout(
+                egui::Layout::centered_and_justified(egui::Direction::TopDown),
+                |ui| ui.code_editor(&mut *content),
+            );
             egui::warn_if_debug_build(ui);
         });
-
-        if false {
-            egui::Window::new("Window").show(ctx, |ui| {
-                ui.label("Windows can be moved by dragging them.");
-                ui.label("They are automatically sized based on contents.");
-                ui.label("You can turn on resizing and scrolling if you like.");
-                ui.label("You would normally choose either panels OR windows.");
-            });
-        }
     }
 }
