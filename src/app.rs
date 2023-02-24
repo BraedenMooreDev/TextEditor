@@ -95,7 +95,7 @@ impl eframe::App for TemplateApp {
             // The central panel the region left after adding TopPanel's and SidePanel's
 
             ui.with_layout(egui::Layout::centered_and_justified(egui::Direction::TopDown), |ui| {
-                ui.code_editor(&mut self.content)
+                ui.code_editor(&mut *content)
             });
             egui::warn_if_debug_build(ui);
         });
