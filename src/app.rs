@@ -1,9 +1,16 @@
+use std::fs::File;
+
+use crate::file_handler::*;
+
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
 #[derive(serde::Deserialize, serde::Serialize)]
 #[serde(default)] // if we add new fields, give them default values when deserializing old state
 pub struct TemplateApp {
     // Example stuff:
     content: String,
+
+    #[serde(skip)]
+    file: Option<File>
 
     // this how you opt-out of serialization of a member
     // #[serde(skip)]
@@ -15,6 +22,7 @@ impl Default for TemplateApp {
         Self {
             // Example stuff:
             content: "".to_owned(),
+            file: None
         }
     }
 }
@@ -44,7 +52,7 @@ impl eframe::App for TemplateApp {
     /// Called each time the UI needs repainting, which may be many times per second.
     /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        let Self { content } = self;
+        let Self { content, file } = self;
 
         // Examples of how to create different panels and windows.
         // Pick whichever suits you.
@@ -54,11 +62,26 @@ impl eframe::App for TemplateApp {
         #[cfg(not(target_arch = "wasm32"))] // no File->Quit on web pages!
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
             // The top panel is often a good place for a menu bar:
+            // Menu options with a tilde '~' are incomplete functionality.
             egui::menu::bar(ui, |ui| {
                 ui.menu_button("File", |ui| {
-                    if ui.button("Quit").clicked() {
-                        _frame.close();
-                    }
+                    if ui.button("New File...").clicked() { file_new(content); }
+                    ui.separator();
+                    if ui.button("Open File").clicked() { file_open(file, content); }
+                    ui.separator();
+                    if ui.button("~ Save").clicked() { /* file_save(file, content); */ }
+                    if ui.button("Save As...").clicked() { file_saveas(file, content); }
+                    ui.separator();
+                    if ui.button("~ Preferences").clicked() {}
+                    if ui.button("Exit").clicked() { _frame.close(); }
+                });
+                ui.menu_button("Edit", |ui| {
+                    if ui.button("~ Undo").clicked() {}
+                    if ui.button("~ Redo").clicked() {}
+                    ui.separator();
+                    if ui.button("~ Cut").clicked() {}
+                    if ui.button("~ Copy").clicked() {}
+                    if ui.button("~ Paste").changed() {}
                 });
             });
         });
@@ -95,7 +118,8 @@ impl eframe::App for TemplateApp {
             // The central panel the region left after adding TopPanel's and SidePanel's
 
             ui.with_layout(egui::Layout::centered_and_justified(egui::Direction::TopDown), |ui| {
-                ui.code_editor(&mut *content)
+                
+                ui.code_editor(content);           
             });
             egui::warn_if_debug_build(ui);
         });
