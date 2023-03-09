@@ -1,3 +1,7 @@
+use std::fs::File;
+
+use crate::file_handler::*;
+
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
 #[derive(serde::Deserialize, serde::Serialize)]
 #[serde(default)] // if we add new fields, give them default values when deserializing old state
@@ -5,9 +9,11 @@ pub struct TemplateApp {
     // Example stuff:
     content: String,
     is_settings_window_open: bool,
-    // this how you opt-out of serialization of a member
-    // #[serde(skip)]
-    // value: f32,
+
+    #[serde(skip)]
+    file: Option<File>, // this how you opt-out of serialization of a member
+                        // #[serde(skip)]
+                        // value: f32,
 }
 
 impl Default for TemplateApp {
@@ -16,6 +22,7 @@ impl Default for TemplateApp {
             // Example stuff:
             content: "".to_owned(),
             is_settings_window_open: false,
+            file: None,
         }
     }
 }
@@ -48,6 +55,7 @@ impl eframe::App for TemplateApp {
         let Self {
             content,
             is_settings_window_open,
+            file,
         } = self;
 
         egui::Window::new("Settings")
@@ -65,11 +73,34 @@ impl eframe::App for TemplateApp {
         #[cfg(not(target_arch = "wasm32"))] // no File->Quit on web pages!
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
             // The top panel is often a good place for a menu bar:
+            // Menu options with a tilde '~' are incomplete functionality.
             egui::menu::bar(ui, |ui| {
                 ui.menu_button("File", |ui| {
-                    if ui.button("Quit").clicked() {
+                    if ui.button("New File...").clicked() {
+                        file_new(content);
+                    }
+                    ui.separator();
+                    if ui.button("Open File").clicked() {
+                        file_open(file, content);
+                    }
+                    ui.separator();
+                    if ui.button("~ Save").clicked() { /* file_save(file, content); */ }
+                    if ui.button("Save As...").clicked() {
+                        file_saveas(file, content);
+                    }
+                    ui.separator();
+                    if ui.button("~ Preferences").clicked() {}
+                    if ui.button("Exit").clicked() {
                         _frame.close();
                     }
+                });
+                ui.menu_button("Edit", |ui| {
+                    if ui.button("~ Undo").clicked() {}
+                    if ui.button("~ Redo").clicked() {}
+                    ui.separator();
+                    if ui.button("~ Cut").clicked() {}
+                    if ui.button("~ Copy").clicked() {}
+                    if ui.button("~ Paste").changed() {}
                 });
                 ui.menu_button("Preferences", |ui| {
                     if ui.button("Settings").clicked() {
@@ -112,7 +143,9 @@ impl eframe::App for TemplateApp {
 
             ui.with_layout(
                 egui::Layout::centered_and_justified(egui::Direction::TopDown),
-                |ui| ui.code_editor(&mut *content),
+                |ui| {
+                    ui.code_editor(content);
+                },
             );
             egui::warn_if_debug_build(ui);
         });
