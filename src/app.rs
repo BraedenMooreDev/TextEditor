@@ -8,6 +8,8 @@ use crate::file_handler::*;
 pub struct TemplateApp {
     // Example stuff:
     content: String,
+
+    #[serde(skip)]
     is_settings_window_open: bool,
 
     #[serde(skip)]
@@ -60,7 +62,7 @@ impl eframe::App for TemplateApp {
 
         egui::Window::new("Settings")
             .open(is_settings_window_open)
-            .default_pos(egui::Pos2::new(20.0, 20.0))
+            .default_pos(egui::Pos2::new(20.0, 0.0))
             .show(ctx, |ui| {
                 ui.label("AAAAaa");
             });
@@ -89,7 +91,9 @@ impl eframe::App for TemplateApp {
                         file_saveas(file, content);
                     }
                     ui.separator();
-                    if ui.button("~ Preferences").clicked() {}
+                    if ui.button("Preferences").clicked() {
+                        self.is_settings_window_open = true;
+                    }
                     if ui.button("Exit").clicked() {
                         _frame.close();
                     }
@@ -101,11 +105,6 @@ impl eframe::App for TemplateApp {
                     if ui.button("~ Cut").clicked() {}
                     if ui.button("~ Copy").clicked() {}
                     if ui.button("~ Paste").changed() {}
-                });
-                ui.menu_button("Preferences", |ui| {
-                    if ui.button("Settings").clicked() {
-                        self.is_settings_window_open = true;
-                    }
                 });
             });
         });
