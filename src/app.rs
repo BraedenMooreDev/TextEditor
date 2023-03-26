@@ -1,5 +1,7 @@
 use std::fs::File;
 
+use egui::style;
+
 use crate::file_handler::*;
 
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
@@ -13,6 +15,9 @@ pub struct TemplateApp {
     is_settings_window_open: bool,
 
     #[serde(skip)]
+    text_font_size: f32,
+
+    #[serde(skip)]
     file: Option<File>, // this how you opt-out of serialization of a member
                         // #[serde(skip)]
                         // value: f32,
@@ -24,6 +29,7 @@ impl Default for TemplateApp {
             // Example stuff:
             content: "".to_owned(),
             is_settings_window_open: false,
+            text_font_size: 14.0,
             file: None,
         }
     }
@@ -57,6 +63,7 @@ impl eframe::App for TemplateApp {
         let Self {
             content,
             is_settings_window_open,
+            text_font_size,
             file,
         } = self;
 
@@ -64,7 +71,17 @@ impl eframe::App for TemplateApp {
             .open(is_settings_window_open)
             .default_pos(egui::Pos2::new(20.0, 0.0))
             .show(ctx, |ui| {
-                ui.label("AAAAaa");
+                ui.label("Font size");
+                let mut temp_font_size: String = text_font_size.to_string();
+                ui.text_edit_singleline(&mut temp_font_size);
+                *text_font_size = temp_font_size.parse::<f32>().unwrap_or(0.0);
+                if ui.button("Apply").clicked() {
+                    let mut sty = (*ctx.style()).clone();
+                    for (_text_style, font_id) in sty.text_styles.iter_mut() {
+                        font_id.size = *text_font_size;
+                    }
+                    ctx.set_style(sty);
+                }
             });
 
         // Examples of how to create different panels and windows.
