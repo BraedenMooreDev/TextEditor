@@ -1,6 +1,4 @@
-use std::fs::File;
-
-use egui::style;
+use std::{fs::File, path::PathBuf};
 
 use crate::file_handler::*;
 
@@ -8,19 +6,15 @@ use crate::file_handler::*;
 #[derive(serde::Deserialize, serde::Serialize)]
 #[serde(default)] // if we add new fields, give them default values when deserializing old state
 pub struct TemplateApp {
-    // Example stuff:
+
     content: String,
-
-    #[serde(skip)]
-    is_settings_window_open: bool,
-
-    #[serde(skip)]
+    path: Option<PathBuf>,
+    #[serde(skip)] file: Option<File>,     
+    #[serde(skip)] is_settings_window_open: bool,
     text_font_size: f32,
-
-    #[serde(skip)]
-    file: Option<File>, // this how you opt-out of serialization of a member
-                        // #[serde(skip)]
-                        // value: f32,
+    // this how you opt-out of serialization of a member
+    // #[serde(skip)]
+    // value: f32,
 }
 
 impl Default for TemplateApp {
@@ -28,9 +22,10 @@ impl Default for TemplateApp {
         Self {
             // Example stuff:
             content: "".to_owned(),
+            path: None,
+            file: None,
             is_settings_window_open: false,
             text_font_size: 14.0,
-            file: None,
         }
     }
 }
@@ -52,6 +47,7 @@ impl TemplateApp {
 }
 
 impl eframe::App for TemplateApp {
+
     /// Called by the frame work to save state before shutdown.
     fn save(&mut self, storage: &mut dyn eframe::Storage) {
         eframe::set_value(storage, eframe::APP_KEY, self);
@@ -61,11 +57,29 @@ impl eframe::App for TemplateApp {
     /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         let Self {
-            content,
+            content, 
+            path,
+            file,
             is_settings_window_open,
             text_font_size,
-            file,
         } = self;
+
+        // Set the title of the window to the name of the currently open file.
+        // If the app just opened, we need to open the file of the stored path from the last time it ran.
+        match path {
+            Some(p) => {
+
+                _frame.set_window_title(("Text Editor - ".to_string() + p.file_name().unwrap().to_str().unwrap()).as_str());
+
+                if file.is_none() {
+                    path_open(path, file, content);
+                }
+            },
+            None => {
+
+                _frame.set_window_title("Text Editor - New File");
+            }
+        }
 
         egui::Window::new("Settings")
             .open(is_settings_window_open)
@@ -95,21 +109,16 @@ impl eframe::App for TemplateApp {
             // Menu options with a tilde '~' are incomplete functionality.
             egui::menu::bar(ui, |ui| {
                 ui.menu_button("File", |ui| {
-                    if ui.button("New File...").clicked() {
-                        file_new(content);
-                    }
+                    if ui.button("New File...").clicked() { file_new(path, file, content); *file = None; ui.close_menu(); }
                     ui.separator();
-                    if ui.button("Open File").clicked() {
-                        file_open(file, content);
-                    }
+                    if ui.button("Open File").clicked() { file_open(path, file, content); ui.close_menu(); }
                     ui.separator();
-                    if ui.button("~ Save").clicked() { /* file_save(file, content); */ }
-                    if ui.button("Save As...").clicked() {
-                        file_saveas(file, content);
-                    }
+                    if ui.button("Save").clicked() { file_save(path, file, content); ui.close_menu(); }
+                    if ui.button("Save As...").clicked() { file_saveas(path, file, content); ui.close_menu(); }
                     ui.separator();
                     if ui.button("Preferences").clicked() {
                         self.is_settings_window_open = true;
+                        ui.close_menu();
                     }
                     if ui.button("Exit").clicked() {
                         _frame.close();
@@ -119,9 +128,9 @@ impl eframe::App for TemplateApp {
                     if ui.button("~ Undo").clicked() {}
                     if ui.button("~ Redo").clicked() {}
                     ui.separator();
-                    if ui.button("~ Cut").clicked() {}
-                    if ui.button("~ Copy").clicked() {}
-                    if ui.button("~ Paste").changed() {}
+                    if ui.button("~ Cut").clicked() { ui.close_menu(); }
+                    if ui.button("~ Copy").clicked() { ui.close_menu(); }
+                    if ui.button("~ Paste").changed() { ui.close_menu(); }
                 });
             });
         });
