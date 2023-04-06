@@ -99,6 +99,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "aho-corasick"
+version = "0.7.20"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cc936419f96fa211c1b9166887b38e5e40b19958e5b895be7c1f93adec7071ac"
+dependencies = [
+ "memchr",
+]
+
+[[package]]
 name = "arboard"
 version = "3.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -600,21 +609,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "eframe_template"
-version = "0.1.0"
-dependencies = [
- "console_error_panic_hook",
- "eframe",
- "egui 0.20.0",
- "egui_dock",
- "native-dialog",
- "serde",
- "tracing-subscriber",
- "tracing-wasm",
- "wasm-bindgen-futures",
-]
-
-[[package]]
 name = "egui"
 version = "0.20.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1043,9 +1037,9 @@ checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
 
 [[package]]
 name = "libc"
-version = "0.2.138"
+version = "0.2.141"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "db6d7e329c562c5dfab7a46a2afabc8b987ab9a4834c9d1ca04dc54c1546cef8"
+checksum = "3304a64d199bb964be99741b7a14d26972741915b3649639149b2479bb46f4b5"
 
 [[package]]
 name = "libloading"
@@ -1489,6 +1483,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "regex"
+version = "1.7.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8b1f693b24f6ac912f4893ef08244d70b6067480d2f1a46e950c9691e6749d1d"
+dependencies = [
+ "aho-corasick",
+ "memchr",
+ "regex-syntax",
+]
+
+[[package]]
+name = "regex-syntax"
+version = "0.6.29"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f162c6dd7b008981e4d40210aca20b4bd0f9b60ca9271061b07f78537722f2e1"
+
+[[package]]
 name = "ron"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1656,6 +1667,22 @@ dependencies = [
  "proc-macro2",
  "quote",
  "unicode-ident",
+]
+
+[[package]]
+name = "text_editor"
+version = "0.1.0"
+dependencies = [
+ "console_error_panic_hook",
+ "eframe",
+ "egui 0.20.0",
+ "egui_dock",
+ "native-dialog",
+ "regex",
+ "serde",
+ "tracing-subscriber",
+ "tracing-wasm",
+ "wasm-bindgen-futures",
 ]
 
 [[package]]

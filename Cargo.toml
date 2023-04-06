@@ -1,7 +1,7 @@
 [package]
-name = "eframe_template"
+name = "text_editor"
 version = "0.1.0"
-authors = ["Emil Ernerfeldt <emil.ernerfeldt@gmail.com>"]
+authors = ["Joshua Farr; Devin Kent; Braeden Moore; Katie Ulinski; Dominic VandenElzen; Nick Zimanski"]
 edition = "2021"
 rust-version = "1.65"
 
@@ -19,6 +19,7 @@ eframe = { version = "0.20.0", default-features = false, features = [
 serde = { version = "1", features = ["derive"] }
 native-dialog = "0.6.3"
 egui_dock = "0.4.0"
+regex = "1.7.3"
 
 # native:
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]

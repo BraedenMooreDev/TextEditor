@@ -29,7 +29,7 @@ pub fn path_open(file_path: &mut Option<PathBuf>, file_buf: &mut Option<File>, c
     // Option error handling to make sure file exists to be able to read it's content.
     match file_buf {
         Some(f) => { content_buf.clear(); f.read_to_string(content_buf).expect("Cannot read from file."); },
-        None => { panic!(); }
+        None => { file_new(file_path, file_buf, content_buf) }
     }
 }
 
