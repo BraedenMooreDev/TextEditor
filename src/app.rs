@@ -1,5 +1,8 @@
+use std::collections::HashMap;
+use std::fs;
 use std::{fs::File, path::PathBuf};
 
+use crate::spell_check::*;
 use crate::file_handler::*;
 
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
@@ -7,11 +10,14 @@ use crate::file_handler::*;
 #[serde(default)] // if we add new fields, give them default values when deserializing old state
 pub struct TemplateApp {
 
+    #[serde(skip)] running: bool,
     content: String,
     path: Option<PathBuf>,
     #[serde(skip)] file: Option<File>,     
     #[serde(skip)] is_settings_window_open: bool,
     text_font_size: f32,
+    spell_checker_on: bool,
+    #[serde(skip)] speller: Speller,
     // this how you opt-out of serialization of a member
     // #[serde(skip)]
     // value: f32,
@@ -21,11 +27,14 @@ impl Default for TemplateApp {
     fn default() -> Self {
         Self {
             // Example stuff:
+            running: false,
             content: "".to_owned(),
             path: None,
             file: None,
             is_settings_window_open: false,
             text_font_size: 14.0,
+            spell_checker_on: true,
+            speller: Speller { letters: "".to_owned(), n_words: HashMap::new() },
         }
     }
 }
@@ -46,6 +55,19 @@ impl TemplateApp {
     }
 }
 
+fn init(speller: &mut Speller) {
+
+    *speller = Speller {
+        letters: "abcdefghijklmnopqrstuvwxyz".to_string(),
+        n_words: HashMap::new()
+    };
+
+    let contents = fs::read_to_string("src/spell_check_training.txt")
+        .expect("Something went wrong reading the file");
+    
+    speller.train(&contents);
+}
+
 impl eframe::App for TemplateApp {
 
     /// Called by the frame work to save state before shutdown.
@@ -57,12 +79,21 @@ impl eframe::App for TemplateApp {
     /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         let Self {
+            running,
             content, 
             path,
             file,
             is_settings_window_open,
             text_font_size,
+            spell_checker_on,
+            speller,
         } = self;
+
+        if !*running {
+
+            *running = true;
+            init(speller);
+        }
 
         // Set the title of the window to the name of the currently open file.
         // If the app just opened, we need to open the file of the stored path from the last time it ran.
@@ -85,10 +116,20 @@ impl eframe::App for TemplateApp {
             .open(is_settings_window_open)
             .default_pos(egui::Pos2::new(20.0, 0.0))
             .show(ctx, |ui| {
+
+                ui.add_space(10.0);
+
+                ui.checkbox(spell_checker_on, "Use Spell Checker");
+
+                ui.add_space(10.0);
+
                 ui.label("Font size");
                 let mut temp_font_size: String = text_font_size.to_string();
                 ui.text_edit_singleline(&mut temp_font_size);
                 *text_font_size = temp_font_size.parse::<f32>().unwrap_or(0.0);
+
+                ui.add_space(20.0);
+
                 if ui.button("Apply").clicked() {
                     let mut sty = (*ctx.style()).clone();
                     for (_text_style, font_id) in sty.text_styles.iter_mut() {
@@ -167,8 +208,8 @@ impl eframe::App for TemplateApp {
             // The central panel the region left after adding TopPanel's and SidePanel's
 
             ui.with_layout(
-                egui::Layout::centered_and_justified(egui::Direction::TopDown),
-                |ui| {
+                egui::Layout::centered_and_justified(egui::Direction::TopDown), |ui| {
+
                     ui.code_editor(content);
                 },
             );
