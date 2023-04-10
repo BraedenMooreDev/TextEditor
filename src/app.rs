@@ -18,6 +18,8 @@ pub struct TemplateApp {
     text_font_size: f32,
     spell_checker_on: bool,
     #[serde(skip)] speller: Speller,
+    #[serde(skip)] prev_content: String,
+    #[serde(skip)] corrections: HashMap<String, String>,
     // this how you opt-out of serialization of a member
     // #[serde(skip)]
     // value: f32,
@@ -35,6 +37,8 @@ impl Default for TemplateApp {
             text_font_size: 14.0,
             spell_checker_on: true,
             speller: Speller { letters: "".to_owned(), n_words: HashMap::new() },
+            prev_content: "".to_owned(),
+            corrections: HashMap::new(),
         }
     }
 }
@@ -87,6 +91,8 @@ impl eframe::App for TemplateApp {
             text_font_size,
             spell_checker_on,
             speller,
+            prev_content,
+            corrections,
         } = self;
 
         if !*running {
@@ -210,7 +216,41 @@ impl eframe::App for TemplateApp {
             ui.with_layout(
                 egui::Layout::centered_and_justified(egui::Direction::TopDown), |ui| {
 
-                    ui.code_editor(content);
+                    let editor = ui.code_editor(content);
+
+                    editor.context_menu(|ui| {
+
+                        ui.label("Corrections:");
+
+                        let curr = content.split_whitespace();
+
+                        corrections.clear();
+
+                        for word in curr.into_iter() {
+
+                            let correction = speller.correct(&word.to_lowercase());
+                            println!("{}: {}", word, correction);
+
+                            if correction != word.to_lowercase() {
+
+                                corrections.insert(word.to_owned(), correction);
+                            }
+                        }
+
+                        *prev_content = content.clone();
+
+                        for key in corrections.clone().keys() {
+
+                            let val = corrections.get(key).unwrap();
+
+                            if ui.selectable_label(false, key.to_owned() + " > " + val).clicked() {
+
+                                *content = content.replace(key, val);
+                                corrections.remove(key);
+                                ui.close_menu();
+                            }
+                        }
+                    });
                 },
             );
             egui::warn_if_debug_build(ui);
