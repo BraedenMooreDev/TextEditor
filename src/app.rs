@@ -1,25 +1,36 @@
+use crate::file_handler::*;
+use crate::spell_check::*;
 use std::collections::HashMap;
 use std::fs;
-use std::{fs::File, path::PathBuf};
-
-use crate::spell_check::*;
-use crate::file_handler::*;
+use std::fs::File;
+use std::path::PathBuf;
 
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
 #[derive(serde::Deserialize, serde::Serialize)]
 #[serde(default)] // if we add new fields, give them default values when deserializing old state
 pub struct TemplateApp {
-
-    #[serde(skip)] running: bool,
+    #[serde(skip)]
+    running: bool,
     content: String,
     path: Option<PathBuf>,
-    #[serde(skip)] file: Option<File>,     
-    #[serde(skip)] is_settings_window_open: bool,
+
+    #[serde(skip)]
+    file: Option<File>,
+
+    #[serde(skip)]
+    is_settings_window_open: bool,
+
     text_font_size: f32,
     spell_checker_on: bool,
-    #[serde(skip)] speller: Speller,
-    #[serde(skip)] prev_content: String,
-    #[serde(skip)] corrections: HashMap<String, String>,
+
+    #[serde(skip)]
+    speller: Speller,
+
+    #[serde(skip)]
+    prev_content: String,
+
+    #[serde(skip)]
+    corrections: HashMap<String, String>,
     // this how you opt-out of serialization of a member
     // #[serde(skip)]
     // value: f32,
@@ -36,7 +47,10 @@ impl Default for TemplateApp {
             is_settings_window_open: false,
             text_font_size: 14.0,
             spell_checker_on: true,
-            speller: Speller { letters: "".to_owned(), n_words: HashMap::new() },
+            speller: Speller {
+                letters: "".to_owned(),
+                n_words: HashMap::new(),
+            },
             prev_content: "".to_owned(),
             corrections: HashMap::new(),
         }
@@ -60,20 +74,18 @@ impl TemplateApp {
 }
 
 fn init(speller: &mut Speller) {
-
     *speller = Speller {
         letters: "abcdefghijklmnopqrstuvwxyz".to_string(),
-        n_words: HashMap::new()
+        n_words: HashMap::new(),
     };
 
     let contents = fs::read_to_string("src/spell_check_training.txt")
         .expect("Something went wrong reading the file");
-    
+
     speller.train(&contents);
 }
 
 impl eframe::App for TemplateApp {
-
     /// Called by the frame work to save state before shutdown.
     fn save(&mut self, storage: &mut dyn eframe::Storage) {
         eframe::set_value(storage, eframe::APP_KEY, self);
@@ -84,7 +96,7 @@ impl eframe::App for TemplateApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         let Self {
             running,
-            content, 
+            content,
             path,
             file,
             is_settings_window_open,
@@ -96,7 +108,6 @@ impl eframe::App for TemplateApp {
         } = self;
 
         if !*running {
-
             *running = true;
             init(speller);
         }
@@ -105,15 +116,16 @@ impl eframe::App for TemplateApp {
         // If the app just opened, we need to open the file of the stored path from the last time it ran.
         match path {
             Some(p) => {
-
-                _frame.set_window_title(("Text Editor - ".to_string() + p.file_name().unwrap().to_str().unwrap()).as_str());
+                _frame.set_window_title(
+                    ("Text Editor - ".to_string() + p.file_name().unwrap().to_str().unwrap())
+                        .as_str(),
+                );
 
                 if file.is_none() {
                     path_open(path, file, content);
                 }
-            },
+            }
             None => {
-
                 _frame.set_window_title("Text Editor - New File");
             }
         }
@@ -122,7 +134,6 @@ impl eframe::App for TemplateApp {
             .open(is_settings_window_open)
             .default_pos(egui::Pos2::new(20.0, 0.0))
             .show(ctx, |ui| {
-
                 ui.add_space(10.0);
 
                 ui.checkbox(spell_checker_on, "Use Spell Checker");
@@ -156,12 +167,25 @@ impl eframe::App for TemplateApp {
             // Menu options with a tilde '~' are incomplete functionality.
             egui::menu::bar(ui, |ui| {
                 ui.menu_button("File", |ui| {
-                    if ui.button("New File...").clicked() { file_new(path, file, content); *file = None; ui.close_menu(); }
+                    if ui.button("New File...").clicked() {
+                        file_new(path, file, content);
+                        *file = None;
+                        ui.close_menu();
+                    }
                     ui.separator();
-                    if ui.button("Open File").clicked() { file_open(path, file, content); ui.close_menu(); }
+                    if ui.button("Open File").clicked() {
+                        file_open(path, file, content);
+                        ui.close_menu();
+                    }
                     ui.separator();
-                    if ui.button("Save").clicked() { file_save(path, file, content); ui.close_menu(); }
-                    if ui.button("Save As...").clicked() { file_saveas(path, file, content); ui.close_menu(); }
+                    if ui.button("Save").clicked() {
+                        file_save(path, file, content);
+                        ui.close_menu();
+                    }
+                    if ui.button("Save As...").clicked() {
+                        file_saveas(path, file, content);
+                        ui.close_menu();
+                    }
                     ui.separator();
                     if ui.button("Preferences").clicked() {
                         self.is_settings_window_open = true;
@@ -175,9 +199,15 @@ impl eframe::App for TemplateApp {
                     if ui.button("~ Undo").clicked() {}
                     if ui.button("~ Redo").clicked() {}
                     ui.separator();
-                    if ui.button("~ Cut").clicked() { ui.close_menu(); }
-                    if ui.button("~ Copy").clicked() { ui.close_menu(); }
-                    if ui.button("~ Paste").changed() { ui.close_menu(); }
+                    if ui.button("~ Cut").clicked() {
+                        ui.close_menu();
+                    }
+                    if ui.button("~ Copy").clicked() {
+                        ui.close_menu();
+                    }
+                    if ui.button("~ Paste").changed() {
+                        ui.close_menu();
+                    }
                 });
             });
         });
@@ -214,12 +244,11 @@ impl eframe::App for TemplateApp {
             // The central panel the region left after adding TopPanel's and SidePanel's
 
             ui.with_layout(
-                egui::Layout::centered_and_justified(egui::Direction::TopDown), |ui| {
-
+                egui::Layout::centered_and_justified(egui::Direction::TopDown),
+                |ui| {
                     let editor = ui.code_editor(content);
 
                     editor.context_menu(|ui| {
-
                         ui.label("Corrections:");
 
                         let curr = content.split_whitespace();
@@ -227,12 +256,10 @@ impl eframe::App for TemplateApp {
                         corrections.clear();
 
                         for word in curr.into_iter() {
-
                             let correction = speller.correct(&word.to_lowercase());
                             println!("{}: {}", word, correction);
 
                             if correction != word.to_lowercase() {
-
                                 corrections.insert(word.to_owned(), correction);
                             }
                         }
@@ -240,11 +267,12 @@ impl eframe::App for TemplateApp {
                         *prev_content = content.clone();
 
                         for key in corrections.clone().keys() {
-
                             let val = corrections.get(key).unwrap();
 
-                            if ui.selectable_label(false, key.to_owned() + " > " + val).clicked() {
-
+                            if ui
+                                .selectable_label(false, key.to_owned() + " > " + val)
+                                .clicked()
+                            {
                                 *content = content.replace(key, val);
                                 corrections.remove(key);
                                 ui.close_menu();
