@@ -66,7 +66,15 @@ impl TemplateApp {
         // Load previous app state (if any).
         // Note that you must enable the `persistence` feature for this to work.
         if let Some(storage) = cc.storage {
-            return eframe::get_value(storage, eframe::APP_KEY).unwrap_or_default();
+            let state: TemplateApp =
+                eframe::get_value(storage, eframe::APP_KEY).unwrap_or_default();
+
+            let mut sty = (*cc.egui_ctx.style()).clone();
+            for (_text_style, font_id) in sty.text_styles.iter_mut() {
+                font_id.size = state.text_font_size;
+            }
+            cc.egui_ctx.set_style(sty);
+            return state;
         }
 
         Default::default()
@@ -145,7 +153,10 @@ impl eframe::App for TemplateApp {
                 ui.text_edit_singleline(&mut temp_font_size);
                 *text_font_size = temp_font_size.parse::<f32>().unwrap_or(0.0);
 
-                ui.add_space(20.0);
+                ui.add_space(10.0);
+                egui::widgets::global_dark_light_mode_buttons(ui);
+
+                ui.add_space(10.0);
 
                 if ui.button("Apply").clicked() {
                     let mut sty = (*ctx.style()).clone();
