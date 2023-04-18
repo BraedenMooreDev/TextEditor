@@ -22,6 +22,7 @@ pub struct TemplateApp {
 
     text_font_size: f32,
     spell_checker_on: bool,
+    theme: egui::Visuals,
 
     #[serde(skip)]
     speller: Speller,
@@ -47,6 +48,7 @@ impl Default for TemplateApp {
             is_settings_window_open: false,
             text_font_size: 14.0,
             spell_checker_on: true,
+            theme: egui::Visuals::dark(),
             speller: Speller {
                 letters: "".to_owned(),
                 n_words: HashMap::new(),
@@ -81,7 +83,7 @@ impl TemplateApp {
     }
 }
 
-fn init(speller: &mut Speller) {
+fn init(ctx: &egui::Context, theme: &egui::Visuals, speller: &mut Speller, ) {
     *speller = Speller {
         letters: "abcdefghijklmnopqrstuvwxyz".to_string(),
         n_words: HashMap::new(),
@@ -91,6 +93,8 @@ fn init(speller: &mut Speller) {
         .expect("Something went wrong reading the file");
 
     speller.train(&contents);
+
+    ctx.set_visuals(theme.clone());
 }
 
 impl eframe::App for TemplateApp {
@@ -110,6 +114,7 @@ impl eframe::App for TemplateApp {
             is_settings_window_open,
             text_font_size,
             spell_checker_on,
+            theme,
             speller,
             prev_content,
             corrections,
@@ -117,7 +122,7 @@ impl eframe::App for TemplateApp {
 
         if !*running {
             *running = true;
-            init(speller);
+            init(ctx, theme, speller);
         }
 
         // Set the title of the window to the name of the currently open file.
@@ -154,7 +159,18 @@ impl eframe::App for TemplateApp {
                 *text_font_size = temp_font_size.parse::<f32>().unwrap_or(0.0);
 
                 ui.add_space(10.0);
-                egui::widgets::global_dark_light_mode_buttons(ui);
+                ui.horizontal(|ui| {
+
+                    if ui.selectable_label(*theme == egui::Visuals::dark(), "Dark").clicked() {
+
+                        *theme = egui::Visuals::dark();
+                    }
+    
+                    if ui.selectable_label(*theme == egui::Visuals::light(), "Light").clicked() {
+    
+                        *theme = egui::Visuals::light();
+                    }
+                });
 
                 ui.add_space(10.0);
 
@@ -164,6 +180,7 @@ impl eframe::App for TemplateApp {
                         font_id.size = *text_font_size;
                     }
                     ctx.set_style(sty);
+                    ctx.set_visuals(theme.clone());
                 }
             });
 
