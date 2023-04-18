@@ -75,8 +75,7 @@ pub fn file_open(file_path: &mut Option<PathBuf>, file_buf: &mut Option<File>, c
     }
 }
 
-// Having issues saving with permission denied.
-pub fn file_save(file_path: &mut Option<PathBuf>, file_buf: &mut Option<File>, content_buf: &mut String) {
+pub fn file_save(file_path: &mut Option<PathBuf>, file_buf: &mut Option<File>, content_buf: &mut String, prompt_saveas: bool) {
 
     match file_buf {
         Some(f) => { 
@@ -84,7 +83,7 @@ pub fn file_save(file_path: &mut Option<PathBuf>, file_buf: &mut Option<File>, c
             f.seek(SeekFrom::Start(0)).unwrap();
             f.write_all(content_buf.as_bytes()).expect("Problem writing to file.");
         },
-        None => { file_saveas(file_path, file_buf, content_buf); }
+        None => { if prompt_saveas { file_saveas(file_path, file_buf, content_buf); } }
     }
 }
 
