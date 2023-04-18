@@ -9,9 +9,9 @@ fn main() {
 
     let native_options = eframe::NativeOptions::default();
     eframe::run_native(
-        "Text Editor - New File",
+        "Rusty Lemon - New File",
         native_options,
-        Box::new(|cc| Box::new(text_editor::TemplateApp::new(cc))),
+        Box::new(|cc| Box::new(rusty_lemon::TextEditor::new(cc))),
     );
 }
 
@@ -30,7 +30,7 @@ fn main() {
         eframe::start_web(
             "the_canvas_id", // hardcode it
             web_options,
-            Box::new(|cc| Box::new(text_editor::TemplateApp::new(cc))),
+            Box::new(|cc| Box::new(rusty_lemon::TextEditor::new(cc))),
         )
         .await
         .expect("failed to start eframe");

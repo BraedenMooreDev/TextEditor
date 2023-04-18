@@ -1,5 +1,5 @@
 [package]
-name = "text_editor"
+name = "rusty_lemon"
 version = "0.1.0"
 authors = ["Joshua Farr; Devin Kent; Braeden Moore; Katie Ulinski; Dominic VandenElzen; Nick Zimanski"]
 edition = "2021"

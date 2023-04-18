@@ -3,4 +3,4 @@
 mod app;
 mod file_handler;
 mod spell_check;
-pub use app::TemplateApp;
+pub use app::TextEditor;
