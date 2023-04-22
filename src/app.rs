@@ -9,7 +9,7 @@ use std::time::Duration;
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
 #[derive(serde::Deserialize, serde::Serialize)]
 #[serde(default)] // if we add new fields, give them default values when deserializing old state
-pub struct TextEditor {
+pub struct RustyLemon {
     #[serde(skip)] running: bool,
     content: String,
     path: Option<PathBuf>,
@@ -39,7 +39,7 @@ pub struct TextEditor {
     // value: f32,
 }
 
-impl Default for TextEditor {
+impl Default for RustyLemon {
     fn default() -> Self {
         Self {
             // Example stuff:
@@ -53,7 +53,7 @@ impl Default for TextEditor {
             auto_save_interval: 30,
             show_close_confirmation: false,
             allowed_to_close: false,
-            spell_checker_on: true,
+            spell_checker_on: false,
             theme: egui::Visuals::dark(),
             speller: Speller {
                 letters: "".to_owned(),
@@ -65,7 +65,7 @@ impl Default for TextEditor {
     }
 }
 
-impl TextEditor {
+impl RustyLemon {
     /// Called once before the first frame.
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
         // This is also where you can customize the look and feel of egui using
@@ -74,7 +74,7 @@ impl TextEditor {
         // Load previous app state (if any).
         // Note that you must enable the `persistence` feature for this to work.
         if let Some(storage) = cc.storage {
-            let state: TextEditor =
+            let state: RustyLemon =
                 eframe::get_value(storage, eframe::APP_KEY).unwrap_or_default();
 
             let mut sty = (*cc.egui_ctx.style()).clone();
@@ -103,7 +103,7 @@ fn init(ctx: &egui::Context, theme: &egui::Visuals, speller: &mut Speller, ) {
     ctx.set_visuals(theme.clone());
 }
 
-impl eframe::App for TextEditor {
+impl eframe::App for RustyLemon {
     /// Called by the frame work to save state before shutdown.
     fn save(&mut self, storage: &mut dyn eframe::Storage) {
         eframe::set_value(storage, eframe::APP_KEY, self);
@@ -232,6 +232,15 @@ impl eframe::App for TextEditor {
                         if ui.button("Close").clicked() {
                             *show_settings_menu = false;
                         }
+
+                        if ui.button("Revert to Default").clicked() {
+                            *text_font_size = 14.0;
+                            *auto_save_on = true;
+                            *auto_save_interval = 30;
+                            *spell_checker_on = false;
+                            *theme = egui::Visuals::dark();
+                            *corrections = HashMap::new();
+                        }
                     });
                     
                 });
@@ -274,20 +283,6 @@ impl eframe::App for TextEditor {
                     }
                     if ui.button("Exit").clicked() {
                         _frame.close();
-                    }
-                });
-                ui.menu_button("Edit", |ui| {
-                    if ui.button("~ Undo").clicked() {}
-                    if ui.button("~ Redo").clicked() {}
-                    ui.separator();
-                    if ui.button("~ Cut").clicked() {
-                        ui.close_menu();
-                    }
-                    if ui.button("~ Copy").clicked() {
-                        ui.close_menu();
-                    }
-                    if ui.button("~ Paste").changed() {
-                        ui.close_menu();
                     }
                 });
             });
