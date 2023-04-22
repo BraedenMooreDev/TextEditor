@@ -11,7 +11,7 @@ fn main() {
     eframe::run_native(
         "Rusty Lemon - New File",
         native_options,
-        Box::new(|cc| Box::new(rusty_lemon::TextEditor::new(cc))),
+        Box::new(|cc| Box::new(rusty_lemon::RustyLemon::new(cc))),
     );
 }
 
@@ -30,7 +30,7 @@ fn main() {
         eframe::start_web(
             "the_canvas_id", // hardcode it
             web_options,
-            Box::new(|cc| Box::new(rusty_lemon::TextEditor::new(cc))),
+            Box::new(|cc| Box::new(rusty_lemon::RustyLemon::new(cc))),
         )
         .await
         .expect("failed to start eframe");
